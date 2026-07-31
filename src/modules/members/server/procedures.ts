@@ -6,7 +6,7 @@ import { db } from '@/db'
 import { members } from '@/db/schema'
 
 import { membersInsertSchema } from '../schemas'
-import { and, count, desc, eq, getTableColumns, ilike, sql } from 'drizzle-orm'
+import { and, count, desc, eq, getTableColumns, ilike, or, sql } from 'drizzle-orm'
 import {
 	DEFAULT_PAGE,
 	DEFAULT_PAGE_SIZE,
@@ -54,7 +54,7 @@ export const membersRouter = createTRPCRouter({
 					...getTableColumns(members),
 				})
 				.from(members)
-				.where(search ? ilike(members.first_name, `%${search}%`) : undefined)
+				.where(search ? or(ilike(members.first_name, `%${search}%`), ilike(members.last_name, `%${search}%`)) : undefined)
 				.orderBy(desc(members.createdAt), desc(members.id))
 				.limit(pageSize)
 				.offset((page - 1) * pageSize)
@@ -62,7 +62,7 @@ export const membersRouter = createTRPCRouter({
 			const [total] = await db
 				.select({ count: count() })
 				.from(members)
-				.where(search ? ilike(members.first_name, `%${search}%`) : undefined)
+				.where(search ? or(ilike(members.first_name, `%${search}%`), ilike(members.last_name, `%${search}%`)) : undefined)
 
 			const totalPages = Math.ceil(total.count / pageSize)
 
