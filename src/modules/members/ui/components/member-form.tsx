@@ -4,6 +4,32 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+const normalizeContactNumber = (value?: string | null) => {
+  if (!value) {
+    return "";
+  }
+
+  const digits = value.replace(/\D/g, "");
+
+  if (!digits) {
+    return "";
+  }
+
+  const withoutPrefix = digits.startsWith("09")
+    ? digits.slice(2)
+    : digits.replace(/^0/, "");
+
+  return `09${withoutPrefix.slice(0, 9)}`;
+};
+
+const normalizeNumericValue = (value?: string | null) => {
+  if (!value) {
+    return "";
+  }
+
+  return value.replace(/\D/g, "");
+};
+
 import { useTRPC } from "@/trpc/client";
 
 import { Input } from "@/components/ui/input";
@@ -42,25 +68,34 @@ export const MemberForm = ({
 }: MemberFormProps) => {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const isEdit = !!initialValues?.id;
+
+  const handleSuccess = async () => {
+    await queryClient.invalidateQueries(trpc.members.getMany.queryOptions({}));
+
+    if (initialValues?.id) {
+      await queryClient.invalidateQueries(
+        trpc.members.getOne.queryOptions({ id: initialValues.id }),
+      );
+    }
+
+    onSuccess?.();
+  };
 
   const createMember = useMutation(
     trpc.members.create.mutationOptions({
-      onSuccess: async () => {
-        await queryClient.invalidateQueries(
-          trpc.members.getMany.queryOptions({}),
-        );
-
-        if (initialValues?.id) {
-          await queryClient.invalidateQueries(
-            trpc.members.getOne.queryOptions({ id: initialValues.id }),
-          );
-        }
-        onSuccess?.();
-      },
+      onSuccess: handleSuccess,
       onError: (error) => {
         toast.error(error.message);
+      },
+    }),
+  );
 
-        //TODO: check if error code is 'FORBIDDEN', redirect to Upgrade
+  const updateMember = useMutation(
+    trpc.members.update.mutationOptions({
+      onSuccess: handleSuccess,
+      onError: (error) => {
+        toast.error(error.message);
       },
     }),
   );
@@ -73,18 +108,18 @@ export const MemberForm = ({
       middle_name: initialValues?.middle_name ?? "",
       last_name: initialValues?.last_name ?? "",
       position: initialValues?.position ?? "Member",
-      contact_number: initialValues?.contact_number ?? "",
-      block_number: initialValues?.block_number ?? "",
-      lot_number: initialValues?.lot_number ?? "",
+      contact_number:
+        normalizeContactNumber(initialValues?.contact_number) || "09",
+      block_number: normalizeNumericValue(initialValues?.block_number),
+      lot_number: normalizeNumericValue(initialValues?.lot_number),
     },
   });
 
-  const isEdit = !!initialValues?.id;
-  const isPending = createMember.isPending;
+  const isPending = isEdit ? updateMember.isPending : createMember.isPending;
 
   const onSubmit = (values: z.infer<typeof membersInsertSchema>) => {
-    if (isEdit) {
-      console.log("TODO: updateMember");
+    if (isEdit && initialValues?.id) {
+      updateMember.mutate({ id: initialValues.id, ...values });
     } else {
       createMember.mutate(values);
     }
@@ -186,7 +221,15 @@ export const MemberForm = ({
             <FormItem>
               <FormLabel>Contact Number</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="Enter your Contact Number" />
+                <Input
+                  {...field}
+                  value={field.value ?? "09"}
+                  onChange={(event) => {
+                    field.onChange(normalizeContactNumber(event.target.value));
+                  }}
+                  placeholder="09123456789"
+                  inputMode="numeric"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -199,7 +242,15 @@ export const MemberForm = ({
             <FormItem>
               <FormLabel>Block Number</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="Enter your Block Number" />
+                <Input
+                  {...field}
+                  value={field.value ?? ""}
+                  onChange={(event) => {
+                    field.onChange(normalizeNumericValue(event.target.value));
+                  }}
+                  placeholder="Enter your Block Number"
+                  inputMode="numeric"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -212,7 +263,15 @@ export const MemberForm = ({
             <FormItem>
               <FormLabel>Lot Number</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="Enter your Lot Number" />
+                <Input
+                  {...field}
+                  value={field.value ?? ""}
+                  onChange={(event) => {
+                    field.onChange(normalizeNumericValue(event.target.value));
+                  }}
+                  placeholder="Enter your Lot Number"
+                  inputMode="numeric"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

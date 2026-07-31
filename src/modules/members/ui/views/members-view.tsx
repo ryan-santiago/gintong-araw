@@ -10,10 +10,8 @@ import { EmptyState } from "@/components/empty-state";
 import { DataTable } from "../components/data-table";
 import { DataPagination } from "../components/data-pagination";
 import { useMembersFilters } from "../../hooks/use-members-filters";
-import { useRouter } from "next/navigation";
 
 export const MembersView = () => {
-  const router = useRouter();
   const [filters, setFilters] = useMembersFilters();
   const trpc = useTRPC();
   const { data } = useSuspenseQuery(
@@ -22,11 +20,7 @@ export const MembersView = () => {
 
   return (
     <div className="flex flex-col flex-1 gap-y-4 pb-4 px-4 md:px-8 ">
-      <DataTable
-        data={data.items}
-        columns={columns}
-        onRowClick={(row) => router.push(`/agents/${row.id}`)}
-      />
+      <DataTable data={data.items} columns={columns} />
       <DataPagination
         page={filters.page}
         totalPages={data.totalPages}
