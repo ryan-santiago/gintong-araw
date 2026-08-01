@@ -274,6 +274,7 @@ function ComboboxChip({
 
 function ComboboxChipsInput({
   className,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- stripped out so it isn't spread onto the underlying <input>, which cannot accept children
   children,
   ...props
 }: ComboboxPrimitive.Input.Props) {
