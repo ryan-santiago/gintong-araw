@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-import { StarIcon, Users } from 'lucide-react'
+import { ClipboardCheck, StarIcon, Users } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import {
@@ -26,6 +26,11 @@ const firstSection = [
 		icon: Users,
 		label: 'Members',
 		href: '/members',
+	},
+	{
+		icon: ClipboardCheck,
+		label: 'Attendance',
+		href: '/attendance',
 	},
 ]
 

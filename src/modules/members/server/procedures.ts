@@ -3,7 +3,7 @@ import { createTRPCRouter, protectedProcedure } from "@/trpc/init";
 import { TRPCError } from "@trpc/server";
 
 import { db } from "@/db";
-import { members } from "@/db/schema";
+import { attendance, members } from "@/db/schema";
 
 import { membersInsertSchema, membersUpdateSchema } from "../schemas";
 import {
@@ -15,7 +15,6 @@ import {
   ilike,
   ne,
   or,
-  sql,
 } from "drizzle-orm";
 import {
   DEFAULT_PAGE,
@@ -30,12 +29,13 @@ export const membersRouter = createTRPCRouter({
     .query(async ({ input }) => {
       const [existingMember] = await db
         .select({
-          //TODO: Change to actual count
-          meetingCount: sql<number>`5`,
           ...getTableColumns(members),
+          meetingCount: count(attendance.id),
         })
         .from(members)
-        .where(eq(members.id, input.id));
+        .leftJoin(attendance, eq(attendance.member_id, members.id))
+        .where(eq(members.id, input.id))
+        .groupBy(members.id);
 
       if (!existingMember) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Member not found" });
@@ -59,11 +59,11 @@ export const membersRouter = createTRPCRouter({
       const { search, page, pageSize } = input;
       const data = await db
         .select({
-          //TODO: Change to actual count
-          meetingCount: sql<number>`6`,
           ...getTableColumns(members),
+          meetingCount: count(attendance.id),
         })
         .from(members)
+        .leftJoin(attendance, eq(attendance.member_id, members.id))
         .where(
           search
             ? or(
@@ -72,6 +72,7 @@ export const membersRouter = createTRPCRouter({
               )
             : undefined,
         )
+        .groupBy(members.id)
         .orderBy(desc(members.createdAt), desc(members.id))
         .limit(pageSize)
         .offset((page - 1) * pageSize);

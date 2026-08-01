@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid'
-import { pgTable, text, timestamp, boolean } from 'drizzle-orm/pg-core'
+import { pgTable, text, timestamp, boolean, date, uniqueIndex } from 'drizzle-orm/pg-core'
 
 export const user = pgTable('user', {
 	id: text('id').primaryKey(),
@@ -72,3 +72,26 @@ export const members = pgTable('members', {
 	createdAt: timestamp('created_at').$defaultFn(() => new Date()),
 	updatedAt: timestamp('updated_at').$defaultFn(() => new Date()),
 })
+
+export const attendance = pgTable(
+	'attendance',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => nanoid()),
+		member_id: text('member_id')
+			.notNull()
+			.references(() => members.id, { onDelete: 'cascade' }),
+		attendance_date: date('attendance_date').notNull(),
+		scanned_at: timestamp('scanned_at')
+			.$defaultFn(() => new Date())
+			.notNull(),
+		createdAt: timestamp('created_at').$defaultFn(() => new Date()),
+	},
+	(table) => [
+		uniqueIndex('attendance_member_date_unique').on(
+			table.member_id,
+			table.attendance_date,
+		),
+	],
+)
