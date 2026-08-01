@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { ClipboardCheck, Users } from "lucide-react";
+import { ClipboardCheck, HomeIcon, Users } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import {
@@ -22,6 +22,11 @@ import { Separator } from "@/components/ui/separator";
 import { DashboardUserButton } from "./dashboard-user-button";
 
 const firstSection = [
+  {
+    icon: HomeIcon,
+    label: "Home",
+    href: "/",
+  },
   {
     icon: Users,
     label: "Members",

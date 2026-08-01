@@ -1,8 +1,17 @@
-import { auth } from '@/lib/auth'
-import { HomeView } from '@/modules/home/ui/views/home-view'
-
+import { Suspense } from 'react'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { ErrorBoundary } from 'react-error-boundary'
+import { dehydrate, HydrationBoundary } from '@tanstack/react-query'
+
+import { auth } from '@/lib/auth'
+import { getQueryClient, trpc } from '@/trpc/server'
+
+import {
+	HomeView,
+	HomeViewError,
+	HomeViewLoading,
+} from '@/modules/home/ui/views/home-view'
 
 const Page = async () => {
 	const session = await auth.api.getSession({
@@ -13,7 +22,24 @@ const Page = async () => {
 		redirect('/sign-in')
 	}
 
-	return <HomeView />
+	const queryClient = getQueryClient()
+	void queryClient.prefetchQuery(trpc.dashboard.getStats.queryOptions())
+	void queryClient.prefetchQuery(
+		trpc.dashboard.getAttendanceTrend.queryOptions({ range: 'week' }),
+	)
+	void queryClient.prefetchQuery(trpc.dashboard.getPositionBreakdown.queryOptions())
+	void queryClient.prefetchQuery(trpc.dashboard.getLatestMembers.queryOptions())
+	void queryClient.prefetchQuery(trpc.dashboard.getLatestAttendance.queryOptions())
+
+	return (
+		<HydrationBoundary state={dehydrate(queryClient)}>
+			<Suspense fallback={<HomeViewLoading />}>
+				<ErrorBoundary fallback={<HomeViewError />}>
+					<HomeView />
+				</ErrorBoundary>
+			</Suspense>
+		</HydrationBoundary>
+	)
 }
 
 export default Page
