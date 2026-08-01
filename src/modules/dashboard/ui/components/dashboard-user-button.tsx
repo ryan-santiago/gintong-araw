@@ -1,6 +1,6 @@
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
-import { ChevronDownIcon, CreditCardIcon, LogOutIcon } from "lucide-react";
+import { ChevronDownIcon, LogOutIcon } from "lucide-react";
 
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -72,10 +72,6 @@ export const DashboardUserButton = () => {
             <DrawerDescription>{data.user.email}</DrawerDescription>
           </DrawerHeader>
           <DrawerFooter>
-            {/* <Button variant="outline" onClick={() => {}}>
-							<CreditCardIcon className="size-4 text-black" />
-							Billing
-						</Button> */}
             <Button variant="outline" onClick={onLogout}>
               <LogOutIcon className="size-4 text-black" />
               Logout
@@ -117,10 +113,6 @@ export const DashboardUserButton = () => {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {/* <DropdownMenuItem className="cursor-pointer flex items-center justify-between">
-					Billing
-					<CreditCardIcon className="size-4" />
-				</DropdownMenuItem> */}
         <DropdownMenuItem
           className="cursor-pointer flex items-center justify-between"
           onClick={onLogout}
