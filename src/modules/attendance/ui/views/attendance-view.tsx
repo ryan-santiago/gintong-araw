@@ -9,14 +9,18 @@ import { EmptyState } from "@/components/empty-state";
 import { useTRPC } from "@/trpc/client";
 
 import { columns } from "../components/columns";
-import { DataTable } from "@/modules/members/ui/components/data-table";
-import { DataPagination } from "@/modules/members/ui/components/data-pagination";
+import { AttendanceCard } from "../components/attendance-card";
+import { DataTable } from "@/components/data-table";
+import { DataPagination } from "@/components/data-pagination";
+import { ViewToggle } from "@/components/view-toggle";
+import { useViewMode } from "@/hooks/use-view-mode";
 import { MemberHistoryDialog } from "../components/member-history-dialog";
 import { useAttendanceFilters } from "../../hooks/use-attendance-filters";
 import { AttendanceRow } from "../../types";
 
 export const AttendanceView = () => {
   const [filters, setFilters] = useAttendanceFilters();
+  const [viewMode, setViewMode] = useViewMode();
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const trpc = useTRPC();
   const { data } = useSuspenseQuery(
@@ -25,11 +29,28 @@ export const AttendanceView = () => {
 
   return (
     <div className="flex flex-col flex-1 gap-y-4 pb-4 px-4 md:px-8 ">
-      <DataTable
-        data={data.items}
-        columns={columns}
-        onRowClick={(row: AttendanceRow) => setSelectedMemberId(row.id)}
-      />
+      <div className="flex justify-end">
+        <ViewToggle value={viewMode} onChange={setViewMode} />
+      </div>
+
+      {viewMode === "table" ? (
+        <DataTable
+          data={data.items}
+          columns={columns}
+          onRowClick={(row: AttendanceRow) => setSelectedMemberId(row.id)}
+        />
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          {data.items.map((member) => (
+            <AttendanceCard
+              key={member.id}
+              member={member}
+              onClick={setSelectedMemberId}
+            />
+          ))}
+        </div>
+      )}
+
       <DataPagination
         page={filters.page}
         totalPages={data.totalPages}
